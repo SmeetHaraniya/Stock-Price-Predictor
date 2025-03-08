@@ -1,6 +1,11 @@
+import pandas as pd
 from fastapi import APIRouter
 from models.stock import Stock
 from pymongo import MongoClient
+import os
+import joblib
+
+from models.stock_data import StockData
 
 stock_router = APIRouter()
 client = MongoClient("mongodb+srv://dharmikparmarpd:dhp12345@cluster0.v5pxg.mongodb.net/stock_market?retryWrites=true&w=majority&appName=Cluster0")
@@ -18,3 +23,15 @@ def get_stocks():
         stock["id"] = str(stock["_id"])
         del stock["_id"]
     return stocks
+
+@stock_router.post("/predict")
+def predict(data: StockData):
+    model_path = os.path.join(os.path.dirname(__file__), "..", "ml_model", "stock_prediction_model.pkl")
+    model = joblib.load(model_path)
+    # Convert input into DataFrame format for model
+    df = pd.DataFrame([data.dict()])
+    
+    # Make prediction
+    prediction = model.predict(df)[0]
+
+    return {"prediction": "Up" if prediction == 1 else "Down"}
