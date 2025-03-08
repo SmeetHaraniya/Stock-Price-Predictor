@@ -1,5 +1,5 @@
 from fastapi import APIRouter
-from models.stock import Stock
+from models.stocks import Stock
 from pymongo import MongoClient
 
 stock_router = APIRouter()

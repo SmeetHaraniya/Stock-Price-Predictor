@@ -2,7 +2,7 @@ from pydantic import BaseModel
 from typing import Optional
 from datetime import datetime
 
-class Transaction(BaseModel):
+class Transactions(BaseModel):
     user_id: str
     symbol: str
     shares: int

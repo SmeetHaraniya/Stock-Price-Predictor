@@ -1,11 +1,11 @@
 from fastapi import FastAPI, HTTPException
 from pymongo import MongoClient
 
-from models.stock import Stock
-from models.user import User
-from models.stock_price import StockPrice
-from models.stock_holding import StockHolding
-from models.transaction import Transaction
+from models.stocks import Stock
+from models.users import User
+from models.stocks_price import StockPrice
+from models.stocks_holding import StockHolding
+from models.transactions import Transaction
 
 from routes.stock_routes import stock_router
 from routes.user_routes import user_router
@@ -43,7 +43,7 @@ class Stock(BaseModel):
 
 # Example: routes/stock_routes.py
 from fastapi import APIRouter
-from models.stock import Stock
+from models.stocks import Stock
 from pymongo import MongoClient
 
 stock_router = APIRouter()
