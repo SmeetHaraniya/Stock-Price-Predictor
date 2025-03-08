@@ -5,6 +5,8 @@ from pymongo import MongoClient
 import os
 import joblib
 
+from models.stock_data import StockData
+
 stock_router = APIRouter()
 client = MongoClient("mongodb+srv://dharmikparmarpd:dhp12345@cluster0.v5pxg.mongodb.net/stock_market?retryWrites=true&w=majority&appName=Cluster0")
 db = client["stock_market"]
