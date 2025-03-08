@@ -1,0 +1,64 @@
+{% extends "layout.html" %}
+
+{% block content %}
+
+    <table class="ui celled striped table">
+        <h1><a href="/index"><i class="angle left icon"></i></a> {{stock.name}}({{stock.symbol}})</h1>
+
+            <!-- TradingView Widget BEGIN -->
+        <div class="tradingview-widget-container" style="height:500px;width:100%;">
+            <div class="tradingview-widget-container__widget" style="height:30px;width:100%;"></div>
+            <script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
+            <script type="text/javascript">
+            new TradingView.widget({
+                "autosize": true,
+                "symbol": "{{stock.exchange}}:{{stock.symbol}}",
+                "timezone": "Asia/Kolkata",
+                "theme": "dark",
+                "style": "1",
+                "locale": "en",
+                "withdateranges": true,
+                "range": "YTD",
+                "hide_side_toolbar": false,
+                "allow_symbol_change": true,
+                "details": true,
+                "hotlist": true,
+                "calendar": false,
+                "show_popup_button": true,
+                "popup_width": "1000",
+                "popup_height": "650",
+                "support_host": "https://www.tradingview.com"
+            });
+            </script>
+            
+        </div>
+        <!-- TradingView Widget END -->
+        
+        <br><br>
+
+        <h2>Prices</h2>
+        <thead>
+        <tr>
+            <th>Date</th>
+            <th>Open</th>
+            <th>High</th>
+            <th>Low</th>
+            <th>Close</th>
+            <th>Volume</th>
+        </tr></thead>
+        <tbody>
+        {% for bar in bars %}
+            <tr>
+                
+                <td>{{bar.date}}</td>
+                <td>{{bar.open}}</td>
+                <td>{{bar.high}}</td>
+                <td>{{bar.low}}</td>
+                <td>{{bar.close}}</td>
+                <td>{{bar.volume}}</td>
+            </tr>    
+        {% endfor %}    
+    
+        </tbody>
+    </table>
+{% endblock %}

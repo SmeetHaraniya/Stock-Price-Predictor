@@ -22,7 +22,8 @@ app = FastAPI()
 
 # Connect to MongoDB
 client = MongoClient("mongodb+srv://dharmikparmarpd:dhp12345@cluster0.v5pxg.mongodb.net/stock_market?retryWrites=true&w=majority&appName=Cluster0")
-db = client['stock_market']   
+db = client['stock_market'] 
+
 stock_collection = db['stock']
 stock_price_collection = db['stock_price']
 
@@ -45,7 +46,8 @@ def root():
 def index(request: Request):
     stock_filter = request.query_params.get('filter', False)
 
-    rows = list(stock_collection.find({}, {"symbol": 1, "name": 1}))
+    rows = stock_collection.find({}, {"symbol": 1, "name": 1})
+    print(rows)
 
     # ✅ Fetch latest closing prices for each stock
     latest_prices = stock_price_collection.aggregate([
@@ -61,7 +63,7 @@ def index(request: Request):
     # ✅ Map closing prices to stock symbols
     closing_values = {}
     for price in latest_prices:
-        # print(price["_id"])
+        print(price["_id"])
         stock = stock_collection.find_one({"symbol": price["_id"]})
         # print(stock)
         if stock:
@@ -79,16 +81,16 @@ def index(request: Request):
 
 
     # # ✅ Debugging (Optional)
-    # print("closing_values:", closing_values)
+    print("closing_values:", closing_values)
 
     # # Apply filter logic for sorting based on closing price
-    if stock_filter == 'new_closing_highs':
-        # Sort by highest closing price (descending)
-        closing_values = sorted(closing_values, key=lambda x: x['close'], reverse=True)
+    # if stock_filter == 'new_closing_highs':
+    #     # Sort by highest closing price (descending)
+    #     closing_values = sorted(closing_values, key=lambda x: x['close'], reverse=True)
 
-    elif stock_filter == 'new_closing_lows':
-        # Sort by lowest closing price (ascending)
-        closing_values = sorted(closing_values, key=lambda x: x['close'])
+    # elif stock_filter == 'new_closing_lows':
+    #     # Sort by lowest closing price (ascending)
+    #     closing_values = sorted(closing_values, key=lambda x: x['close'])
 
     # closing_values_dict = {stock['symbol']: {'name': stock['name'], 'close': stock['close']} for stock in closing_values}
 
@@ -113,3 +115,20 @@ def search_stocks(query: str = Query("")):
     result = list(stocks)
     
     return JSONResponse(result)
+
+@app.get("/stock/{symbol}")
+def stock_details(request: Request, symbol: str):
+    # Fetch stock details using the symbol
+    stock = stock_collection.find_one({"symbol": symbol})
+
+    if stock is None:
+        return {"error": "Stock not found"}
+
+    # Fetch stock price history for the given stock_id, sorted by latest date
+    prices = list(stock_price_collection.find({"stock_id": stock["symbol"]}).sort("date", -1))
+
+    return templates.TemplateResponse("stock_details.html", {
+        "request": request,
+        "stock": stock,
+        "bars": prices,
+    })
