@@ -35,3 +35,9 @@ def login(request: Request, email: str = Form(...), password: str = Form(...)):
     return RedirectResponse(url="/index", status_code=303)
     # return templates.TemplateResponse("index.html", {"request": request})
 
+
+
+@login_router.get("/logout")
+def logout(request: Request):
+    request.session.clear()  # Clear the session data
+    return RedirectResponse(url="/login", status_code=303)

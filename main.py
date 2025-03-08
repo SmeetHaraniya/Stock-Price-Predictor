@@ -41,6 +41,7 @@ templates = Jinja2Templates(directory="templates")
 def root():
     return RedirectResponse(url="/login")
 
+
 # @app.get("/index")
 # def index(request: Request):
 #     return templates.TemplateResponse("index.html", status_code=303)
