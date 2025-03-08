@@ -4,4 +4,4 @@ class User(BaseModel):
     username: str
     email: str
     password_hash: str
-    cash: float = 10000.00
+    cash: float = 10000.00 
