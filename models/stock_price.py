@@ -1,7 +1,7 @@
 from pydantic import BaseModel
 from typing import Optional
 
-class StocksPrice(BaseModel):
+class StockPrice(BaseModel):
     stock_id: str
     date: str
     open: float

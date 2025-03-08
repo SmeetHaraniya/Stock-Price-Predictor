@@ -1,5 +1,5 @@
 from fastapi import APIRouter, HTTPException
-from models.users import User
+from models.user import User
 from pymongo import MongoClient
 
 user_router = APIRouter()
