@@ -32,6 +32,7 @@ def login(request: Request, email: str = Form(...), password: str = Form(...)):
     # You can store the user ID in a session or a cookie
     request.session["user_id"] = str(user["_id"])
 
+    print("Session:", request.session.get('user_id'))
     return RedirectResponse(url="/index", status_code=303)
     # return templates.TemplateResponse("index.html", {"request": request})
 

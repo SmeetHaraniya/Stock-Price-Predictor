@@ -24,8 +24,11 @@ app = FastAPI()
 client = MongoClient("mongodb+srv://dharmikparmarpd:dhp12345@cluster0.v5pxg.mongodb.net/stock_market?retryWrites=true&w=majority&appName=Cluster0")
 db = client['stock_market'] 
 
+user_collection = db['user']
 stock_collection = db['stock']
 stock_price_collection = db['stock_price']
+stock_holding_collection = db['stock_holding']
+transaction_collection = db['transaction']
 
 app.add_middleware(SessionMiddleware, secret_key=config.SPECIAL_KEY)
 
@@ -44,6 +47,7 @@ def root():
 
 @app.get("/index")
 def index(request: Request):
+    print('Index:', request.session.get('user_id'))
     stock_filter = request.query_params.get('filter', False)
 
     rows = stock_collection.find({}, {"symbol": 1, "name": 1})
@@ -69,31 +73,8 @@ def index(request: Request):
         if stock:
             closing_values[stock['symbol']] = price['close']
 
-    # closing_values = []
-    # for price in latest_prices:
-    #     stock = stock_collection.find_one({"symbol": price["_id"]})
-    #     if stock:
-    #         closing_values.append({
-    #             "symbol": stock['symbol'],  # Stock symbol
-    #             "name": stock['name'],      # Stock name
-    #             "close": price['close']     # Latest close price
-    #         })
-
-
     # # ✅ Debugging (Optional)
     print("closing_values:", closing_values)
-
-    # # Apply filter logic for sorting based on closing price
-    # if stock_filter == 'new_closing_highs':
-    #     # Sort by highest closing price (descending)
-    #     closing_values = sorted(closing_values, key=lambda x: x['close'], reverse=True)
-
-    # elif stock_filter == 'new_closing_lows':
-    #     # Sort by lowest closing price (ascending)
-    #     closing_values = sorted(closing_values, key=lambda x: x['close'])
-
-    # closing_values_dict = {stock['symbol']: {'name': stock['name'], 'close': stock['close']} for stock in closing_values}
-
 
     # ✅ Return the template response
     return templates.TemplateResponse("index.html", {
@@ -101,7 +82,6 @@ def index(request: Request):
         "stocks": rows,
         "closing_values": closing_values
     })
-
 
 @app.get("/search_stocks")
 def search_stocks(query: str = Query("")):
@@ -132,3 +112,15 @@ def stock_details(request: Request, symbol: str):
         "stock": stock,
         "bars": prices,
     })
+
+@app.post('/stock/buy')
+def stock_buy(request: Request, symbol: str = Form(...), quantity: str = Form(...), price: str = Form(...)):
+    stock_symbol = symbol
+    stock_quantity = int(quantity)
+    stock_price = int(price)
+
+    user_id = request.session.get("user_id")
+    print('user_id', user_id)
+    user = user_collection.find({"_id": user_id})
+
+    return templates.TemplateResponse('trading.html',{user_id: "user"})
