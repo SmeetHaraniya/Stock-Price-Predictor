@@ -1,0 +1,52 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="container">
+    <h2>Stock Portfolio</h2>
+    <h3>Funds: ${{ portfolio.funds }}</h3>
+
+    <h3>Owned Stocks</h3>
+    <table>
+        <thead>
+            <tr>
+                <th>Stock</th>
+                <th>Quantity</th>
+                <th>Avg Price</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for stock, details in portfolio.stocks.items() %}
+            <tr>
+                <td>{{ stock }}</td>
+                <td>{{ details.quantity }}</td>
+                <td>${{ "%.2f"|format(details.avg_price) }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <h3>Transaction History</h3>
+    <table>
+        <thead>
+            <tr>
+                <th>Action</th>
+                <th>Stock</th>
+                <th>Quantity</th>
+                <th>Price</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for transaction in portfolio.history %}
+            <tr>
+                <td>{{ transaction.action }}</td>
+                <td>{{ transaction.stock }}</td>
+                <td>{{ transaction.quantity }}</td>
+                <td>${{ "%.2f"|format(transaction.price) }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <a href="{{ url_for('index') }}">Back to Home</a>
+</div>
+{% endblock %}

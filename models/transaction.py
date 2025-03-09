@@ -4,9 +4,8 @@ from datetime import datetime
 
 class Transaction(BaseModel):
     user_id: str
+    action: str
     symbol: str
-    shares: int
+    quantity: int
     price: float
-    transaction_type: str
-    profit_loss: Optional[float]
     timestamp: datetime = datetime.now()
