@@ -257,45 +257,45 @@ def sell(request: Request, symbol: str = Form(...), quantity: int = Form(...), p
 
     return {"message": "Stock sold successfully"}
 
-@app.get("/portfolio")
-def portfolio(request: Request):
-    user_id = request.session.get("user_id")
-    if not user_id:
-        raise HTTPException(status_code=401, detail="Not authenticated")
+# @app.get("/portfolio")
+# def portfolio(request: Request):
+#     user_id = request.session.get("user_id")
+#     if not user_id:
+#         raise HTTPException(status_code=401, detail="Not authenticated")
 
-    # Fetch user details
-    user = users_collection.find_one({"_id": ObjectId(user_id)})
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
+#     # Fetch user details
+#     user = users_collection.find_one({"_id": ObjectId(user_id)})
+#     if not user:
+#         raise HTTPException(status_code=404, detail="User not found")
 
-    # Fetch stock holdings for the user
-    stock_holdings = stock_holding_collection.find({"user_id": user_id})
-    portfolio_stocks = {}
-    for holding in stock_holdings:
-        symbol = holding["company_symbol"]
-        portfolio_stocks[symbol] = {
-            "quantity": holding["number_of_shares"],
-            "avg_price": holding["avg_price"]
-        }
+#     # Fetch stock holdings for the user
+#     stock_holdings = stock_holding_collection.find({"user_id": user_id})
+#     portfolio_stocks = {}
+#     for holding in stock_holdings:
+#         symbol = holding["company_symbol"]
+#         portfolio_stocks[symbol] = {
+#             "quantity": holding["number_of_shares"],
+#             "avg_price": holding["avg_price"]
+#         }
 
-    # Fetch transaction history for the user
-    transaction_history = transaction_collection.find({"user_id": user_id}).sort("timestamp", -1)
+#     # Fetch transaction history for the user
+#     transaction_history = transaction_collection.find({"user_id": user_id}).sort("timestamp", -1)
 
-    portfolio_data = {
-        "funds": user.get("cash", 0),  # User's available cash
-        "stocks": portfolio_stocks,
-        "history": [
-            {
-                "action": transaction["action"],
-                "stock": transaction["symbol"],
-                "quantity": transaction["quantity"],
-                "price": transaction["price"]
-            }
-            for transaction in transaction_history
-        ]
-    }
+#     portfolio_data = {
+#         "funds": user.get("cash", 0),  # User's available cash
+#         "stocks": portfolio_stocks,
+#         "history": [
+#             {
+#                 "action": transaction["action"],
+#                 "stock": transaction["symbol"],
+#                 "quantity": transaction["quantity"],
+#                 "price": transaction["price"]
+#             }
+#             for transaction in transaction_history
+#         ]
+#     }
 
-    return templates.TemplateResponse("portfolio.html", {"request": request, "portfolio": portfolio_data})
+#     return templates.TemplateResponse("portfolio.html", {"request": request, "portfolio": portfolio_data})
     
 @app.route("/transaction-history", methods=["GET"])
 def stock_transaction_history(request: Request):
@@ -319,7 +319,7 @@ def stock_transaction_history(request: Request):
                 "stock": transaction["symbol"],
                 "quantity": transaction["quantity"],
                 "price": transaction["price"],
-                "profit_loss": transaction["profit_loss"]
+                "profit_loss": float(transaction.get("profit_loss", '0').replace('-', '0'))
             }
             for transaction in transaction_history
         ]
@@ -327,82 +327,387 @@ def stock_transaction_history(request: Request):
 
     return templates.TemplateResponse("transaction_history.html", {"request": request, "portfolio": portfolio_data})
     
+# @app.route("/profit_loss_chart")
+# def profit_loss_chart_data(request: Request):
+#     user_id = request.session.get("user_id")
 
-@app.route("/profit_loss_chart")
-def profit_loss_chart_data(request: Request):
-    user_id = request.session.get("user_id")
+#     # Fetch all SELL transactions with profit/loss from MongoDB
+#     # transactions = transaction_collection.find(
+#     #     {"user_id": user_id, "action": "SELL"},
+#     #     {"timestamp": 1, "profit_loss": 1}  # Only select timestamp and profit_loss
+#     # ).sort("timestamp", 1)  # Sort by timestamp in ascending order
 
-    # Fetch all SELL transactions with profit/loss from MongoDB
-    # transactions = transaction_collection.find(
-    #     {"user_id": user_id, "action": "SELL"},
-    #     {"timestamp": 1, "profit_loss": 1}  # Only select timestamp and profit_loss
-    # ).sort("timestamp", 1)  # Sort by timestamp in ascending order
+#     # Ensure at least 5 dummy data points if no transactions are found
+#     # if not transactions or len(transactions) < 5:
+#         # transactions = [
+#         #     {"timestamp": "2025-02-27", "profit_loss": 100},
+#         #     {"timestamp": "2025-02-28", "profit_loss": -50},
+#         #     {"timestamp": "2025-02-29", "profit_loss": 75},
+#         #     {"timestamp": "2025-03-01", "profit_loss": -20},
+#         #     {"timestamp": "2025-03-02", "profit_loss": 120},
+#         #     {"timestamp": "2025-04-27", "profit_loss": 150},
+#         #     {"timestamp": "2025-04-28", "profit_loss": 110},
+#         #     {"timestamp": "2025-04-29", "profit_loss": 75},
+#         #     {"timestamp": "2025-04-01", "profit_loss": -20},
+#         #     {"timestamp": "2025-04-02", "profit_loss": -10},
+#         #     {"timestamp": "2025-04-27", "profit_loss": 5},
+#         #     {"timestamp": "2025-05-28", "profit_loss": 0},
+#         #     {"timestamp": "2025-05-29", "profit_loss": 15},
+#         #     {"timestamp": "2025-05-01", "profit_loss": -50},
+#         #     {"timestamp": "2025-05-02", "profit_loss": 10},
+#         #     {"timestamp": "2025-06-27", "profit_loss": 30},
+#         #     {"timestamp": "2025-06-28", "profit_loss": 60},
+#         #     {"timestamp": "2025-06-29", "profit_loss": 75},
+#         #     {"timestamp": "2025-06-01", "profit_loss": 40},
+#         #     {"timestamp": "2025-06-02", "profit_loss": 120},
+#         #     {"timestamp": "2025-07-27", "profit_loss": 100},
+#         #     {"timestamp": "2025-07-28", "profit_loss": -50},
+#         #     {"timestamp": "2025-07-29", "profit_loss": 75},
+#         #     {"timestamp": "2025-07-01", "profit_loss": -20},
+#         #     {"timestamp": "2025-07-02", "profit_loss": 120}
+#         # ]
 
-    # Ensure at least 5 dummy data points if no transactions are found
-    # if not transactions or len(transactions) < 5:
-        # transactions = [
-        #     {"timestamp": "2025-02-27", "profit_loss": 100},
-        #     {"timestamp": "2025-02-28", "profit_loss": -50},
-        #     {"timestamp": "2025-02-29", "profit_loss": 75},
-        #     {"timestamp": "2025-03-01", "profit_loss": -20},
-        #     {"timestamp": "2025-03-02", "profit_loss": 120},
-        #     {"timestamp": "2025-04-27", "profit_loss": 150},
-        #     {"timestamp": "2025-04-28", "profit_loss": 110},
-        #     {"timestamp": "2025-04-29", "profit_loss": 75},
-        #     {"timestamp": "2025-04-01", "profit_loss": -20},
-        #     {"timestamp": "2025-04-02", "profit_loss": -10},
-        #     {"timestamp": "2025-04-27", "profit_loss": 5},
-        #     {"timestamp": "2025-05-28", "profit_loss": 0},
-        #     {"timestamp": "2025-05-29", "profit_loss": 15},
-        #     {"timestamp": "2025-05-01", "profit_loss": -50},
-        #     {"timestamp": "2025-05-02", "profit_loss": 10},
-        #     {"timestamp": "2025-06-27", "profit_loss": 30},
-        #     {"timestamp": "2025-06-28", "profit_loss": 60},
-        #     {"timestamp": "2025-06-29", "profit_loss": 75},
-        #     {"timestamp": "2025-06-01", "profit_loss": 40},
-        #     {"timestamp": "2025-06-02", "profit_loss": 120},
-        #     {"timestamp": "2025-07-27", "profit_loss": 100},
-        #     {"timestamp": "2025-07-28", "profit_loss": -50},
-        #     {"timestamp": "2025-07-29", "profit_loss": 75},
-        #     {"timestamp": "2025-07-01", "profit_loss": -20},
-        #     {"timestamp": "2025-07-02", "profit_loss": 120}
-        # ]
+#     transactions = [
+#             {"timestamp": "2025-02-27", "profit_loss": 100},
+#             {"timestamp": "2025-02-28", "profit_loss": -50},
+#             {"timestamp": "2025-02-29", "profit_loss": 75},
+#             {"timestamp": "2025-03-01", "profit_loss": -20},
+#             {"timestamp": "2025-03-02", "profit_loss": 120},
+#             {"timestamp": "2025-04-27", "profit_loss": 150},
+#             {"timestamp": "2025-04-28", "profit_loss": 110},
+#             {"timestamp": "2025-04-29", "profit_loss": 75},
+#             {"timestamp": "2025-04-01", "profit_loss": -20},
+#             {"timestamp": "2025-04-02", "profit_loss": -10},
+#             {"timestamp": "2025-04-27", "profit_loss": 5},
+#             {"timestamp": "2025-05-28", "profit_loss": 0},
+#             {"timestamp": "2025-05-29", "profit_loss": 15},
+#             {"timestamp": "2025-05-01", "profit_loss": -50},
+#             {"timestamp": "2025-05-02", "profit_loss": 10},
+#             {"timestamp": "2025-06-27", "profit_loss": 30},
+#             {"timestamp": "2025-06-28", "profit_loss": 60},
+#             {"timestamp": "2025-06-29", "profit_loss": 75},
+#             {"timestamp": "2025-06-01", "profit_loss": 40},
+#             {"timestamp": "2025-06-02", "profit_loss": 120},
+#             {"timestamp": "2025-07-27", "profit_loss": 100},
+#             {"timestamp": "2025-07-28", "profit_loss": -50},
+#             {"timestamp": "2025-07-29", "profit_loss": 75},
+#             {"timestamp": "2025-07-01", "profit_loss": -20},
+#             {"timestamp": "2025-07-02", "profit_loss": 120}
+#         ]
 
-    transactions = [
-            {"timestamp": "2025-02-27", "profit_loss": 100},
-            {"timestamp": "2025-02-28", "profit_loss": -50},
-            {"timestamp": "2025-02-29", "profit_loss": 75},
-            {"timestamp": "2025-03-01", "profit_loss": -20},
-            {"timestamp": "2025-03-02", "profit_loss": 120},
-            {"timestamp": "2025-04-27", "profit_loss": 150},
-            {"timestamp": "2025-04-28", "profit_loss": 110},
-            {"timestamp": "2025-04-29", "profit_loss": 75},
-            {"timestamp": "2025-04-01", "profit_loss": -20},
-            {"timestamp": "2025-04-02", "profit_loss": -10},
-            {"timestamp": "2025-04-27", "profit_loss": 5},
-            {"timestamp": "2025-05-28", "profit_loss": 0},
-            {"timestamp": "2025-05-29", "profit_loss": 15},
-            {"timestamp": "2025-05-01", "profit_loss": -50},
-            {"timestamp": "2025-05-02", "profit_loss": 10},
-            {"timestamp": "2025-06-27", "profit_loss": 30},
-            {"timestamp": "2025-06-28", "profit_loss": 60},
-            {"timestamp": "2025-06-29", "profit_loss": 75},
-            {"timestamp": "2025-06-01", "profit_loss": 40},
-            {"timestamp": "2025-06-02", "profit_loss": 120},
-            {"timestamp": "2025-07-27", "profit_loss": 100},
-            {"timestamp": "2025-07-28", "profit_loss": -50},
-            {"timestamp": "2025-07-29", "profit_loss": 75},
-            {"timestamp": "2025-07-01", "profit_loss": -20},
-            {"timestamp": "2025-07-02", "profit_loss": 120}
-        ]
+#     # Convert to JSON format for charting
+#     chart_data = {
+#         "timestamps": [str(t["timestamp"]) for t in transactions],
+#         "profit_losses": [t["profit_loss"] for t in transactions]
+#     }
 
-    # Convert to JSON format for charting
-    chart_data = {
-        "timestamps": [str(t["timestamp"]) for t in transactions],
-        "profit_losses": [t["profit_loss"] for t in transactions]
+#     # Close the MongoDB connection
+#     client.close()
+
+#     return JSONResponse(content=chart_data)
+
+##############################################################################
+
+from fastapi import APIRouter, Request, Depends, HTTPException
+from fastapi.responses import HTMLResponse
+from fastapi.templating import Jinja2Templates
+from datetime import datetime, timedelta
+import random  # For demo data, replace with actual data in production
+
+from models.user import User
+from models.transaction import Transaction
+from models.stock_holding import StockHolding
+
+temp_user = {
+    "username":"demo_user",
+        "email":"demo@example.com",
+        "password_hash":"hashed_password",
+        "cash":5000.00
+}
+
+temp_user = User(**temp_user)
+
+# @app.get("/portfolio")
+def get_portfolio(request: Request, current_user: User = temp_user):
+    # Get user's stock holdings
+    portfolio = {
+        "funds": current_user.cash,
+        "stocks": {}
+    }
+    
+    # Fetch user's stock holdings from database
+    holdings = get_user_holdings(current_user.username)
+    
+    # Get current prices (replace with actual API call in production)
+    current_prices = get_current_prices([holding.company_symbol for holding in holdings])
+    
+    # Get stock names
+    stock_names = get_stock_names([holding.company_symbol for holding in holdings])
+    
+    # Calculate portfolio metrics
+    total_investment = 0
+    portfolio_value = current_user.cash
+    
+    for holding in holdings:
+        symbol = holding.company_symbol
+        portfolio["stocks"][symbol] = {
+            "quantity": holding.number_of_shares,
+            "avg_price": holding.avg_price
+        }
+        
+        # Calculate investment and current value
+        investment = holding.number_of_shares * holding.avg_price
+        current_value = holding.number_of_shares * current_prices.get(symbol, 0)
+        
+        total_investment += investment
+        portfolio_value += current_value
+    
+    # Calculate profit/loss percentage
+    profit_loss = ((portfolio_value - current_user.cash - total_investment) / total_investment * 100) if total_investment > 0 else 0
+    
+    # Get recent transactions
+    recent_transactions = get_recent_transactions(current_user.username, limit=10)
+    
+    # Generate performance data for chart (replace with actual historical data in production)
+    performance_dates, performance_values = generate_performance_data()
+    
+    return templates.TemplateResponse("temp_portfolio.html", {
+        "request": request,
+        "portfolio": portfolio,
+        "current_prices": current_prices,
+        "stock_names": stock_names,
+        "total_investment": total_investment,
+        "portfolio_value": portfolio_value,
+        "profit_loss": profit_loss,
+        "recent_transactions": recent_transactions,
+        "performance_dates": performance_dates,
+        "performance_values": performance_values
+    })
+
+# Helper functions
+def get_user_holdings(username: str):
+    # Replace with actual database query
+    # This is a placeholder implementation
+    return [
+        StockHolding(user_id=username, company_symbol="AAPL", number_of_shares=10, avg_price=150.50),
+        StockHolding(user_id=username, company_symbol="MSFT", number_of_shares=5, avg_price=280.75),
+        StockHolding(user_id=username, company_symbol="GOOGL", number_of_shares=2, avg_price=2750.10),
+    ]
+
+def get_current_prices(symbols: list):
+    # Replace with actual API call to get current prices
+    # This is a placeholder implementation
+    return {
+        "AAPL": 165.30,
+        "MSFT": 290.20,
+        "GOOGL": 2800.50,
+        "AMZN": 3300.75,
+        "META": 330.25,
     }
 
-    # Close the MongoDB connection
-    client.close()
+def get_stock_names(symbols: list):
+    # Replace with actual database query or API call
+    # This is a placeholder implementation
+    return {
+        "AAPL": "Apple Inc.",
+        "MSFT": "Microsoft Corporation",
+        "GOOGL": "Alphabet Inc.",
+        "AMZN": "Amazon.com, Inc.",
+        "META": "Meta Platforms, Inc.",
+    }
 
-    return JSONResponse(content=chart_data)
+def get_recent_transactions(username: str, limit: int = 10):
+    # Replace with actual database query
+    # This is a placeholder implementation
+    return [
+        Transaction(
+            user_id=username,
+            action="BUY",
+            symbol="AAPL",
+            quantity=2,
+            price=160.25,
+            timestamp=datetime.now() - timedelta(days=1),
+            profit_loss="N/A"
+        ),
+        Transaction(
+            user_id=username,
+            action="SELL",
+            symbol="MSFT",
+            quantity=1,
+            price=295.50,
+            timestamp=datetime.now() - timedelta(days=3),
+            profit_loss="+$14.75"
+        ),
+        Transaction(
+            user_id=username,
+            action="BUY",
+            symbol="GOOGL",
+            quantity=1,
+            price=2730.80,
+            timestamp=datetime.now() - timedelta(days=5),
+            profit_loss="N/A"
+        ),
+    ]
+
+def generate_performance_data():
+    # Generate sample performance data for the chart
+    # Replace with actual historical data in production
+    dates = []
+    values = []
+    base_value = 10000
+    current_value = base_value
+    
+    for i in range(30, 0, -1):
+        date = (datetime.now() - timedelta(days=i)).strftime('%b %d')
+        dates.append(date)
+        
+        # Random daily change between -2% and +2%
+        change = random.uniform(-0.02, 0.02)
+        current_value = current_value * (1 + change)
+        values.append(round(current_value, 2))
+    
+    return dates, values
+
+# Authentication dependency
+# def get_current_user():
+    # Replace with actual authentication logic
+    # This is a placeholder implementation
+    return User(
+        username="demo_user",
+        email="demo@example.com",
+        password_hash="hashed_password",
+        cash=5000.00
+    )
+
+################################################################################
+
+@app.get("/portfolio")
+def get_portfolio(request: Request):
+    # Fetch the current user from the database (for now I'm using static, later you can apply authentication)
+    current_user = get_current_user(request)
+    print("current_user", current_user)
+    if not current_user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    # Get user details
+    user = current_user
+    
+    # Get user's stock holdings from MongoDB
+    holdings = list(stock_holding_collection.find({"user_id": request.session.get("user_id")}))
+    print("holdings:", holdings)
+    
+    # Get current prices from MongoDB or any API
+    symbols = [holding['company_symbol'] for holding in holdings]
+    current_prices = get_current_prices(symbols)
+    
+    # Get stock names
+    stock_names = get_stock_names(symbols)
+    
+    # Calculate portfolio metrics
+    portfolio = {
+        "funds": user.get('cash'),
+        "stocks": {}
+    }
+    total_investment = 0
+    portfolio_value = user.get('cash')
+    
+    for holding in holdings:
+        symbol = holding["company_symbol"]
+        quantity = holding["number_of_shares"]
+        avg_price = holding["avg_price"]
+        
+        # Add stock data to portfolio
+        portfolio["stocks"][symbol] = {
+            "quantity": quantity,
+            "avg_price": avg_price
+        }
+        
+        # Calculate investment and current value
+        investment = quantity * avg_price
+        current_value = quantity * current_prices.get(symbol, 0)
+        
+        total_investment += investment
+        portfolio_value += current_value
+    
+    # Calculate profit/loss percentage
+    profit_loss = ((portfolio_value - user.get('cash') - total_investment) / total_investment * 100) if total_investment > 0 else 0
+    
+    # Get recent transactions from MongoDB
+    recent_transactions = list(transaction_collection.find({"user_id": request.session.get("user_id")}).sort("timestamp", -1).limit(10))
+    
+    # Generate performance data for chart
+    performance_dates, performance_values = generate_performance_data()
+    
+    # Render the portfolio template
+    return templates.TemplateResponse("portfolio.html", {
+        "request": request,
+        "portfolio": portfolio,
+        "current_prices": current_prices,
+        "stock_names": stock_names,
+        "total_investment": total_investment,
+        "portfolio_value": portfolio_value,
+        "profit_loss": profit_loss,
+        "recent_transactions": recent_transactions,
+        "performance_dates": performance_dates,
+        "performance_values": performance_values
+    })
+
+
+# ✅ Function to fetch current prices from MongoDB or an API
+def get_current_prices(symbols: list):
+    price_dict = {}
+    for symbol in symbols:
+        # Fetching a single document for each symbol
+        price = db.stock_price.find_one({"stock_id": symbol})
+        if price:
+            price_dict[symbol] = price['close']
+    return price_dict
+
+
+
+# ✅ Function to fetch stock names from MongoDB
+def get_stock_names(symbols: list):
+    stock_names = db.stocks.find({})
+    name_dict = {stock['symbol']: stock['name'] for stock in stock_names}
+    return name_dict
+
+
+# ✅ Function to generate performance data
+def generate_performance_data():
+    dates = []
+    values = []
+    base_value = 10000
+    current_value = base_value
+    
+    for i in range(30, 0, -1):
+        date = (datetime.now() - timedelta(days=i)).strftime('%b %d')
+        dates.append(date)
+        
+        # Random daily change between -2% and +2%
+        change = random.uniform(-0.02, 0.02)
+        current_value = current_value * (1 + change)
+        values.append(round(current_value, 2))
+    
+    return dates, values
+
+
+def get_current_user(request: Request):
+    # Get user_id from session
+    user_id = request.session.get("user_id")
+    
+    if not user_id:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    
+    # Fetch the user from MongoDB
+    user = users_collection.find_one({"_id": ObjectId(user_id)})
+    
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    # Return user data
+    return {
+        "user_id": str(user["_id"]),
+        "username": user["username"],
+        "email": user["email"],
+        "cash": user["cash"]
+    }
