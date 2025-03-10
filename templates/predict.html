@@ -1,55 +1,46 @@
-<!DOCTYPE html>
-<html lang="en">
+{% extends "layout.html" %}
 
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Stock Prediction</title>
-    <link rel="stylesheet" href="/templates/css/predict.css">
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            text-align: center;
-            margin: 50px;
-            background-color: #f4f4f4;
-        }
+{% block content %}
 
-        .container {
-            background: white;
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
-            width: 300px;
-            margin: auto;
-        }
+<h1 id="stock-name" class="ui header"></h1>
+<table class="ui celled striped table">
+    <thead>
+        <tr>
+            <th>Date</th>
+            <th>Open</th>
+            <th>High</th>
+            <th>Low</th>
+            <th>Close</th>
+            <th>Volume</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+        </tr>
+    </tbody>
+</table>
 
-        form {
-            display: flex;
-            flex-direction: column;
-        }
 
-        label {
-            margin-top: 10px;
-        }
-
-        button {
-            margin-top: 15px;
-            padding: 10px;
-            background-color: #28a745;
-            color: white;
-            border: none;
-            cursor: pointer;
-        }
-
-        button:hover {
-            background-color: #218838;
-        }
-    </style>
-</head>
-
-<body>
-    <div class="container">
-        <h2>Stock Prediction</h2>
+<h1 class="ui header">Prediction Results</h1>
+<div id="prediction-container" style="
+        background: #fff;
+        padding: 15px;
+        margin-top: 15px;
+        border-radius: 8px;
+        box-shadow: 0px 0px 8px rgba(0, 0, 0, 0.1);
+    ">
+    <p style="font-size: 16px; font-weight: bold; color: #333;">Predicted Trend:</p>
+    <p id="prediction-result" style="font-size: 20px; color: #28a745; font-weight: bold;">-</p>
+    <p style="color: #666; font-size: 14px;">This predicted trend is based on the latest market trends,
+        sentiment analysis, and technical indicators.</p>
+</div>
+<!-- <h2>Stock Prediction</h2>
         <form id="prediction-form">
             <label>Close Price: <input type="number" id="close" step="0.01"></label>
             <label>High Price: <input type="number" id="high" step="0.01"></label>
@@ -60,37 +51,49 @@
             <label>Sentiment Score: <input type="number" id="sentiment" step="0.01"></label>
             <button type="submit">Predict</button>
         </form>
-        <h3>Prediction: <span id="prediction-result">-</span></h3>
-    </div>
-    <script >
-        document.getElementById("prediction-form").addEventListener("submit", async function (event) {
-            event.preventDefault(); // Prevent form from reloading page
+        <h3>Prediction: <span id="prediction-result">-</span></h3> -->
 
-            const data = {
-                Close: parseFloat(document.getElementById("close").value),
-                High: parseFloat(document.getElementById("high").value),
-                Low: parseFloat(document.getElementById("low").value),
-                Open: parseFloat(document.getElementById("open").value),
-                Volume: parseInt(document.getElementById("volume").value),
-                Tweet_Count: parseInt(document.getElementById("tweet_count").value),
-                Sentiment_Score: parseFloat(document.getElementById("sentiment").value)
-            };
 
-            console.log(data)
-            const response = await fetch("http://127.0.0.1:8000/predict", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify(data)
-            });
+<script>
+    window.onload = async function () {
+        let stockData = JSON.parse(localStorage.getItem("latestStockData"));
+        document.getElementById("stock-name").innerText = stockData.stock_id + " Last day details"
+        if (stockData) {
+            document.querySelector("td:nth-child(1)").innerText = stockData.date || "-";
+            document.querySelector("td:nth-child(2)").innerText = stockData.open || "-";
+            document.querySelector("td:nth-child(3)").innerText = stockData.high || "-";
+            document.querySelector("td:nth-child(4)").innerText = stockData.low || "-";
+            document.querySelector("td:nth-child(5)").innerText = stockData.close || "-";
+            document.querySelector("td:nth-child(6)").innerText = stockData.volume || "-";
+        } else {
+            console.log("No stock data found in localStorage.");
+        }
 
-            console.log(-1)
-            const result = await response.json();
-            document.getElementById("prediction-result").innerText = result.prediction;
+        console.log(stockData)
+        stockData = {
+            Close: stockData.close,
+            High: stockData.high,
+            Low: stockData.low,
+            Open: stockData.open,
+            Volume: stockData.volume,
+            Tweet_Count: 15000,
+            Sentiment_Score: 0.9
+        }
+
+        const response = await fetch("http://127.0.0.1:8000/predict", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(stockData)
         });
 
-    </script>
-</body>
+        const result = await response.json();
+        console.log(result, -1)
+        document.getElementById("prediction-result").innerText = result.prediction;
+    };
 
-</html>
+</script>
+
+
+{% endblock %}

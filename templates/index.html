@@ -1,16 +1,16 @@
 {% extends "layout.html" %}
 
 {% block content %}
-    <h1 class="ui header">📈 Stock List</h1>
+<h1 class="ui header">📈 Stock List</h1>
 
-    <!-- Search Bar -->
-    <div class="ui fluid icon input">
-        <input type="text" id="searchInput" placeholder="🔍 Search stocks..." onkeyup="searchStocks()">
-        <i class="search icon"></i>
-    </div>
+<!-- Search Bar -->
+<div class="ui fluid icon input">
+    <input type="text" id="searchInput" placeholder="🔍 Search stocks..." onkeyup="searchStocks()">
+    <i class="search icon"></i>
+</div>
 
-    <!-- Filter Section -->
-    <!-- <div class="ui segment">
+<!-- Filter Section -->
+<!-- <div class="ui segment">
         <h3 class="ui header">Filter Stocks</h3>
         <form method="get" class="ui form">
             <div class="field">
@@ -24,66 +24,87 @@
         </form>
     </div> -->
 
-    <!-- Stock Table -->
-    <table class="ui celled striped table">
-        <thead>
-            <tr>
-                <th>Ticker</th>
-                <th>Name</th>
-                <th>Price</th>
-            </tr>
-        </thead>
-        <tbody id="stockTableBody">
-            {% for stock in stocks %}
-            <tr>
-                <td class="collapsing">
-                    <i class="tag icon"></i> {{ stock.symbol }}
-                </td>
-                <td><a href="/stock/{{ stock.symbol }}">{{ stock.name }}</a></td>
-                <td>
-                    {% if closing_values[stock.symbol] %}
-                        {{ closing_values[stock.symbol] }}
-                    {% else %}
-                        N/A
-                    {% endif %}
-                </td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+<!-- Stock Table -->
+<table class="ui celled striped table">
+    <thead>
+        <tr>
+            <th>Ticker</th>
+            <th>Name</th>
+            <th>Price</th>
+        </tr>
+    </thead>
+    <tbody id="stockTableBody">
+        {% for stock in stocks %}
+        <tr>
+            <td class="collapsing">
+                <i class="tag icon"></i> {{ stock.symbol }}
+            </td>
+            <td><a href="/stock/{{ stock.symbol }}">{{ stock.name }}</a></td>
+            <td>
+                {% if closing_values[stock.symbol] %}
+                {{ closing_values[stock.symbol] }}
+                {% else %}
+                N/A
+                {% endif %}
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
 
-    <!-- JavaScript for Search -->
-    <script>
-        let debounceTimer;
+<!-- JavaScript for Search -->
+<script>
 
-        function searchStocks() {
-            clearTimeout(debounceTimer);
+    // const socket = new WebSocket("ws://127.0.0.1:8000/ws/stocks");
 
-            debounceTimer = setTimeout(() => {
-                let query = document.getElementById("searchInput").value;
+    // socket.onmessage = function (event) {
+    //     const stockPrices = JSON.parse(event.data);
+    //     console.log("Updated Prices:", stockPrices);
 
-                if (query.length === 0) {
-                    document.getElementById("stockTableBody").innerHTML = "";
-                    return;
-                }
+    //     // Loop through stock prices and update the UI
+    //     for (const stockId in stockPrices) {
+    //         let priceElement = document.getElementById(`price-${stockId}`);
+    //         if (priceElement) {
+    //             priceElement.innerText = `$${stockPrices[stockId].toFixed(2)}`;
+    //         }
+    //     }
+    // };
 
-                fetch(`/search_stocks?query=${query}`)
-                    .then(response => response.json())
-                    .then(data => {
-                        let tableBody = document.getElementById("stockTableBody");
-                        tableBody.innerHTML = "";
+    // socket.onclose = function () {
+    //     console.log("WebSocket Connection Closed");
+    // };
 
-                        data.forEach(stock => {
-                            let row = `<tr>
+
+    let debounceTimer;
+
+    function searchStocks() {
+        clearTimeout(debounceTimer);
+
+        debounceTimer = setTimeout(() => {
+            let query = document.getElementById("searchInput").value;
+
+            if (query.length === 0) {
+                document.getElementById("stockTableBody").innerHTML = "";
+                return;
+            }
+
+            fetch(`/search_stocks?query=${query}`)
+                .then(response => response.json())
+                .then(data => {
+                    let tableBody = document.getElementById("stockTableBody");
+                    tableBody.innerHTML = "";
+
+                    data.forEach(stock => {
+                        let row = `<tr>
                                 <td><i class="tag icon"></i> ${stock.symbol}</td>
                                 <td><a href="/stock/${stock.symbol}">${stock.name}</a></td>
                                 <td>${stock.close}</td>
                             </tr>`;
-                            tableBody.innerHTML += row;
-                        });
-                    })
-                    .catch(error => console.error("Error:", error));
-            }, 300);
-        }
-    </script>
+                        tableBody.innerHTML += row;
+                    });
+                })
+                .catch(error => console.error("Error:", error));
+        }, 300);
+    }
+</script>
 {% endblock %}

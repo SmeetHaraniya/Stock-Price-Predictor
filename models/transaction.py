@@ -9,3 +9,4 @@ class Transaction(BaseModel):
     quantity: int
     price: float
     timestamp: datetime = datetime.now()
+    profit_loss: str
