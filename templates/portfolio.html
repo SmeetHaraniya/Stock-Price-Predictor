@@ -30,24 +30,54 @@
       </p>
     </div>
   </div>
+
+
   
   <!-- Charts and Holdings Section -->
   <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      
+    <div class="lg:col-span-3 flex flex-col lg:flex-row justify-center items-center gap-8">
+    
+      <!-- Portfolio Allocation Chart -->
+      <div class="bg-white p-4 rounded-lg shadow border border-gray-200 w-96">
+        <h2 class="text-lg font-semibold mb-4 text-center">Portfolio Allocation</h2>
+        <div class="h-64 flex justify-center items-center">
+          <canvas id="portfolioAllocationChart"></canvas>
+        </div>
+      </div>
+  
+      <!-- Unrealized P&L Chart -->
+      <div class="bg-white p-4 rounded-lg shadow border border-gray-200 w-96">
+        <h2 class="text-lg font-semibold mb-4 text-center">Unrealized P&L</h2>
+        <div class="h-64 flex justify-center items-center">
+          <canvas id="profitLossChart" width="400"></canvas>
+        </div>
+      </div>
+  
+    </div>
+
     <!-- Portfolio Allocation Chart -->
-    <div class="lg:col-span-1 bg-white p-4 rounded-lg shadow border border-gray-200">
+    <!-- <div class="lg:col-span-1 bg-white p-4 rounded-lg shadow border border-gray-200">
       <h2 class="text-lg font-semibold mb-4">Portfolio Allocation</h2>
       <div class="h-64">
         <canvas id="portfolioAllocationChart"></canvas>
       </div>
     </div>
+
+    <div class="lg:col-span-1 bg-white p-4 rounded-lg shadow border border-gray-200">
+      <h2 class="text-lg font-semibold mb-4">Unrealized P&L</h2>
+      <div class="h-64">
+        <canvas id="profitLossChart"></canvas>
+      </div>
+    </div> -->
     
     <!-- Performance Chart -->
-    <div class="lg:col-span-2 bg-white p-4 rounded-lg shadow border border-gray-200">
+    <!-- <div class="lg:col-span-2 bg-white p-4 rounded-lg shadow border border-gray-200">
       <h2 class="text-lg font-semibold mb-4">Portfolio Performance</h2>
       <div class="h-64">
         <canvas id="performanceChart"></canvas>
       </div>
-    </div>
+    </div> -->
     
     <!-- Holdings Table -->
     <div class="lg:col-span-3 bg-white p-4 rounded-lg shadow border border-gray-200">
@@ -139,6 +169,7 @@
         </table>
       </div>
     </div>
+
   </div>
 </div>
 
@@ -147,7 +178,35 @@
 
 <canvas id="portfolioAllocationChart" width="400" height="400"></canvas>
 
+
 <script>
+  // Profitable vs Losing Holdings
+  const profitLossCtx = document.getElementById('profitLossChart').getContext('2d');
+  const profitLossChart = new Chart(profitLossCtx, {
+    type: 'doughnut',
+    data: {
+      labels: ['Profitable Holdings', 'Losing Holdings'],
+      datasets: [{
+        data: {{data}},
+        backgroundColor: [
+          '#10B981', // Green for Profitable Holdings
+          '#EF4444'  // Red for Losing Holdings
+        ],
+        borderWidth: 1
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          position: 'top',
+        },
+        
+      }
+    }
+  });
+
   // Portfolio Allocation Chart
   const allocationCtx = document.getElementById('portfolioAllocationChart').getContext('2d');
   const allocationChart = new Chart(allocationCtx, {
@@ -168,7 +227,7 @@
       maintainAspectRatio: false,
       plugins: {
         legend: {
-          position: 'right',
+          position: 'top',
         }
       }
     }
@@ -180,7 +239,7 @@
   console.log('Labels:', labels);
   console.log('Data:', data);
 
-
+  /*
   // Performance Chart
   const performanceCtx = document.getElementById('performanceChart').getContext('2d');
   const performanceChart = new Chart(performanceCtx, {
@@ -231,6 +290,10 @@
       }
     }
   });
+  */
+  
+
 </script>
+
 
 {% endblock %}

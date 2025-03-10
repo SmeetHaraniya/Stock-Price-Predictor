@@ -6,6 +6,10 @@ from fastapi import FastAPI, Form, HTTPException, Query, Request
 from fastapi.responses import JSONResponse, RedirectResponse
 from starlette.middleware.sessions import SessionMiddleware
 from pymongo import MongoClient
+from fastapi.responses import HTMLResponse
+from fastapi.templating import Jinja2Templates
+from datetime import datetime, timedelta
+import random
 
 from models.stock import Stock
 from models.user import User
@@ -406,184 +410,10 @@ def stock_transaction_history(request: Request):
 
 #     return JSONResponse(content=chart_data)
 
-##############################################################################
-
-from fastapi import APIRouter, Request, Depends, HTTPException
-from fastapi.responses import HTMLResponse
-from fastapi.templating import Jinja2Templates
-from datetime import datetime, timedelta
-import random  # For demo data, replace with actual data in production
-
-from models.user import User
-from models.transaction import Transaction
-from models.stock_holding import StockHolding
-
-temp_user = {
-    "username":"demo_user",
-        "email":"demo@example.com",
-        "password_hash":"hashed_password",
-        "cash":5000.00
-}
-
-temp_user = User(**temp_user)
-
-# @app.get("/portfolio")
-def get_portfolio(request: Request, current_user: User = temp_user):
-    # Get user's stock holdings
-    portfolio = {
-        "funds": current_user.cash,
-        "stocks": {}
-    }
-    
-    # Fetch user's stock holdings from database
-    holdings = get_user_holdings(current_user.username)
-    
-    # Get current prices (replace with actual API call in production)
-    current_prices = get_current_prices([holding.company_symbol for holding in holdings])
-    
-    # Get stock names
-    stock_names = get_stock_names([holding.company_symbol for holding in holdings])
-    
-    # Calculate portfolio metrics
-    total_investment = 0
-    portfolio_value = current_user.cash
-    
-    for holding in holdings:
-        symbol = holding.company_symbol
-        portfolio["stocks"][symbol] = {
-            "quantity": holding.number_of_shares,
-            "avg_price": holding.avg_price
-        }
-        
-        # Calculate investment and current value
-        investment = holding.number_of_shares * holding.avg_price
-        current_value = holding.number_of_shares * current_prices.get(symbol, 0)
-        
-        total_investment += investment
-        portfolio_value += current_value
-    
-    # Calculate profit/loss percentage
-    profit_loss = ((portfolio_value - current_user.cash - total_investment) / total_investment * 100) if total_investment > 0 else 0
-    
-    # Get recent transactions
-    recent_transactions = get_recent_transactions(current_user.username, limit=10)
-    
-    # Generate performance data for chart (replace with actual historical data in production)
-    performance_dates, performance_values = generate_performance_data()
-    
-    return templates.TemplateResponse("temp_portfolio.html", {
-        "request": request,
-        "portfolio": portfolio,
-        "current_prices": current_prices,
-        "stock_names": stock_names,
-        "total_investment": total_investment,
-        "portfolio_value": portfolio_value,
-        "profit_loss": profit_loss,
-        "recent_transactions": recent_transactions,
-        "performance_dates": performance_dates,
-        "performance_values": performance_values
-    })
-
-# Helper functions
-def get_user_holdings(username: str):
-    # Replace with actual database query
-    # This is a placeholder implementation
-    return [
-        StockHolding(user_id=username, company_symbol="AAPL", number_of_shares=10, avg_price=150.50),
-        StockHolding(user_id=username, company_symbol="MSFT", number_of_shares=5, avg_price=280.75),
-        StockHolding(user_id=username, company_symbol="GOOGL", number_of_shares=2, avg_price=2750.10),
-    ]
-
-def get_current_prices(symbols: list):
-    # Replace with actual API call to get current prices
-    # This is a placeholder implementation
-    return {
-        "AAPL": 165.30,
-        "MSFT": 290.20,
-        "GOOGL": 2800.50,
-        "AMZN": 3300.75,
-        "META": 330.25,
-    }
-
-def get_stock_names(symbols: list):
-    # Replace with actual database query or API call
-    # This is a placeholder implementation
-    return {
-        "AAPL": "Apple Inc.",
-        "MSFT": "Microsoft Corporation",
-        "GOOGL": "Alphabet Inc.",
-        "AMZN": "Amazon.com, Inc.",
-        "META": "Meta Platforms, Inc.",
-    }
-
-def get_recent_transactions(username: str, limit: int = 10):
-    # Replace with actual database query
-    # This is a placeholder implementation
-    return [
-        Transaction(
-            user_id=username,
-            action="BUY",
-            symbol="AAPL",
-            quantity=2,
-            price=160.25,
-            timestamp=datetime.now() - timedelta(days=1),
-            profit_loss="N/A"
-        ),
-        Transaction(
-            user_id=username,
-            action="SELL",
-            symbol="MSFT",
-            quantity=1,
-            price=295.50,
-            timestamp=datetime.now() - timedelta(days=3),
-            profit_loss="+$14.75"
-        ),
-        Transaction(
-            user_id=username,
-            action="BUY",
-            symbol="GOOGL",
-            quantity=1,
-            price=2730.80,
-            timestamp=datetime.now() - timedelta(days=5),
-            profit_loss="N/A"
-        ),
-    ]
-
-def generate_performance_data():
-    # Generate sample performance data for the chart
-    # Replace with actual historical data in production
-    dates = []
-    values = []
-    base_value = 10000
-    current_value = base_value
-    
-    for i in range(30, 0, -1):
-        date = (datetime.now() - timedelta(days=i)).strftime('%b %d')
-        dates.append(date)
-        
-        # Random daily change between -2% and +2%
-        change = random.uniform(-0.02, 0.02)
-        current_value = current_value * (1 + change)
-        values.append(round(current_value, 2))
-    
-    return dates, values
-
-# Authentication dependency
-# def get_current_user():
-    # Replace with actual authentication logic
-    # This is a placeholder implementation
-    return User(
-        username="demo_user",
-        email="demo@example.com",
-        password_hash="hashed_password",
-        cash=5000.00
-    )
-
-################################################################################
-
+# old final
 @app.get("/portfolio")
 def get_portfolio(request: Request):
-    # Fetch the current user from the database (for now I'm using static, later you can apply authentication)
+    # Fetch the current user from the database 
     current_user = get_current_user(request)
     print("current_user", current_user)
     if not current_user:
@@ -637,6 +467,36 @@ def get_portfolio(request: Request):
     
     # Generate performance data for chart
     performance_dates, performance_values = generate_performance_data()
+
+
+    ########################################################################
+    # Calculate profitable and losing holdings
+    profitable_stocks = 0
+    losing_stocks = 0
+    
+    for holding in holdings:
+        symbol = holding["company_symbol"]
+        quantity = holding["number_of_shares"]
+        avg_price = holding["avg_price"]
+        
+        # Calculate investment and current value
+        investment = quantity * avg_price
+        current_value = quantity * current_prices.get(symbol, 0)
+        
+        # Calculate profit/loss
+        profit_loss = current_value - investment
+        
+        # Count profitable and losing holdings
+        if profit_loss > 0:
+            profitable_stocks += 1
+        else:
+            losing_stocks += 1
+    
+    # Data for graph (Profitable vs. Losing Holdings)
+    labels = ['Profitable Holdings', 'Losing Holdings']
+    data = [profitable_stocks, losing_stocks]
+
+    print(data);
     
     # Render the portfolio template
     return templates.TemplateResponse("portfolio.html", {
@@ -649,7 +509,9 @@ def get_portfolio(request: Request):
         "profit_loss": profit_loss,
         "recent_transactions": recent_transactions,
         "performance_dates": performance_dates,
-        "performance_values": performance_values
+        "performance_values": performance_values,
+        "labels": labels,
+        "data": data
     })
 
 
