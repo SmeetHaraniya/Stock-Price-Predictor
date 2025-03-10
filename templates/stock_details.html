@@ -90,9 +90,9 @@
             <input type="number" id="buyQuantity" min="1" class="ui input"
                 style="width: 50%; text-align: center; border: 1px solid black">
 
-            <label style="display: block; font-size: 1.2em; margin-bottom: 10px;">Enter Price:</label>
+            <!-- <label style="display: block; font-size: 1.2em; margin-bottom: 10px;">Enter Price:</label>
             <input type="number" id="buyPrice" min="0" step="0.01" class="ui input"
-                style="width: 50%; text-align: center; border: 1px solid black">
+                style="width: 50%; text-align: center; border: 1px solid black"> -->
         </div>
     </div>
     <div class="actions" style="text-align: center;">
@@ -115,9 +115,9 @@
             <input type="number" id="sellQuantity" min="1" class="ui input"
                 style="width: 50%; text-align: center; border: 1px solid black">
 
-            <label style="display: block; font-size: 1.2em; margin-bottom: 10px;">Enter Price:</label>
+            <!-- <label style="display: block; font-size: 1.2em; margin-bottom: 10px;">Enter Price:</label>
             <input type="number" id="sellPrice" min="0" step="0.01" class="ui input"
-                style="width: 50%; text-align: center; border: 1px solid black">
+                style="width: 50%; text-align: center; border: 1px solid black"> -->
         </div>
     </div>
     <div class="actions" style="text-align: center;">
@@ -175,11 +175,15 @@
 
     function confirmBuy() {
         let quantity = document.getElementById("buyQuantity").value;
-        let price = document.getElementById("buyPrice").value; // Ensure you have an input field for price
-        let symbol = document.getElementById("buyPrice").value; // Jinja variable for stock symbol
+        // let price = document.getElementById("buyPrice").value; // Ensure you have an input field for price
+        let symbol = document.getElementById("buySymbol").value; // Jinja variable for stock symbol
 
-        if (quantity < 1 || price <= 0) {
-            alert("Please enter a valid quantity and price.");
+        // if (quantity < 1 || price <= 0) {
+        //     alert("Please enter a valid quantity and price.");
+        //     return;
+        // }
+        if (quantity < 1) {
+            alert("Please enter a valid quantity.");
             return;
         }
 
@@ -187,7 +191,7 @@
         let formData = new FormData();
         formData.append("symbol", symbol);
         formData.append("quantity", quantity);
-        formData.append("price", price);
+        // formData.append("price", price);
 
         // Send form data using POST request
         fetch("/buy", {
@@ -210,27 +214,27 @@
     }
 
     function confirmSell() {
-        let symbol = document.getElementById("sellSymbol").value.trim();
+        let symbol = document.getElementById("sellSymbol").value;
         let quantity = parseInt(document.getElementById("sellQuantity").value);
-        let price = parseFloat(document.getElementById("sellPrice").value);
+        // let price = parseFloat(document.getElementById("sellPrice").value);
 
-        if (!symbol || quantity < 1 || price <= 0) {
-            alert("Please enter a valid stock symbol, quantity, and price.");
+        // if (!symbol || quantity < 1 || price <= 0) {
+        //     alert("Please enter a valid stock symbol, quantity, and price.");
+        //     return;
+        // }
+
+        if (!symbol || quantity < 1) {
+            alert("Please enter a valid stock symbol and quantity.");
             return;
         }
 
-        let sellData = {
-            symbol: symbol,
-            quantity: quantity,
-            price: price
-        };
+        let formData = new FormData();
+        formData.append("symbol", symbol);
+        formData.append("quantity", quantity);
 
         fetch("/sell", {
             method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify(sellData)
+            body: formData
         })
             .then(response => response.json())
             .then(data => {
