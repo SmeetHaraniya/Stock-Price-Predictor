@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stock Prediction</title>
+    <link rel="stylesheet" href="/templates/css/predict.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin: 50px;
+            background-color: #f4f4f4;
+        }
+
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+            width: 300px;
+            margin: auto;
+        }
+
+        form {
+            display: flex;
+            flex-direction: column;
+        }
+
+        label {
+            margin-top: 10px;
+        }
+
+        button {
+            margin-top: 15px;
+            padding: 10px;
+            background-color: #28a745;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #218838;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h2>Stock Prediction</h2>
+        <form id="prediction-form">
+            <label>Close Price: <input type="number" id="close" step="0.01"></label>
+            <label>High Price: <input type="number" id="high" step="0.01"></label>
+            <label>Low Price: <input type="number" id="low" step="0.01"></label>
+            <label>Open Price: <input type="number" id="open" step="0.01"></label>
+            <label>Volume: <input type="number" id="volume"></label>
+            <label>Tweet Count: <input type="number" id="tweet_count"></label>
+            <label>Sentiment Score: <input type="number" id="sentiment" step="0.01"></label>
+            <button type="submit">Predict</button>
+        </form>
+        <h3>Prediction: <span id="prediction-result">-</span></h3>
+    </div>
+    <script >
+        document.getElementById("prediction-form").addEventListener("submit", async function (event) {
+            event.preventDefault(); // Prevent form from reloading page
+
+            const data = {
+                Close: parseFloat(document.getElementById("close").value),
+                High: parseFloat(document.getElementById("high").value),
+                Low: parseFloat(document.getElementById("low").value),
+                Open: parseFloat(document.getElementById("open").value),
+                Volume: parseInt(document.getElementById("volume").value),
+                Tweet_Count: parseInt(document.getElementById("tweet_count").value),
+                Sentiment_Score: parseFloat(document.getElementById("sentiment").value)
+            };
+
+            console.log(data)
+            const response = await fetch("http://127.0.0.1:8000/predict", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(data)
+            });
+
+            console.log(-1)
+            const result = await response.json();
+            document.getElementById("prediction-result").innerText = result.prediction;
+        });
+
+    </script>
+</body>
+
+</html>

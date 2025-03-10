@@ -131,9 +131,9 @@ def stock_details(request: Request, symbol: str):
     return JSONResponse(user)
     
 
-@app.post("/buy")
-# def buy(request: Request):
-def buy(request: Request, symbol: str = Form(...), quantity: int = Form(...), price: float = Form(...)):
+# @app.post("/buy")
+# # def buy(request: Request):
+# def buy(request: Request, symbol: str = Form(...), quantity: int = Form(...), price: float = Form(...)):
     user_id = request.session.get("user_id")
     print("post:",  request.session)
     user = users_collection.find_one({"_id": ObjectId(user_id)})

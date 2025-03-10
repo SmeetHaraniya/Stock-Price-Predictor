@@ -1,5 +1,6 @@
+from fastapi.templating import Jinja2Templates
 import pandas as pd
-from fastapi import APIRouter
+from fastapi import APIRouter, Request
 from models.stock import Stock
 from pymongo import MongoClient
 import os
@@ -10,6 +11,8 @@ from models.stock_data import StockData
 stock_router = APIRouter()
 client = MongoClient("mongodb+srv://dharmikparmarpd:dhp12345@cluster0.v5pxg.mongodb.net/stock_market?retryWrites=true&w=majority&appName=Cluster0")
 db = client["stock_market"]
+
+templates = Jinja2Templates(directory="templates")
 
 @stock_router.post("/stocks/", response_model=Stock)
 def create_stock(stock: Stock):
@@ -23,6 +26,13 @@ def get_stocks():
         stock["id"] = str(stock["_id"])
         del stock["_id"]
     return stocks
+
+@stock_router.get("/predict")
+def predict(request: Request):
+    return templates.TemplateResponse("predict.html",{
+        "request": request
+    })
+
 
 @stock_router.post("/predict")
 def predict(data: StockData):
